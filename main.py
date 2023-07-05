@@ -23,15 +23,16 @@ while 1:
         searcher = show_sub('반납')
         book_return(searcher, db)
 
-    elif main_choice == 4:  # 대출 정보 조회
-        book_loan_info()
-
-    elif main_choice == 5:  # 도서 추가
+    elif main_choice == 4:  # 도서 추가
+        new_id = new_book_id(db)
         add = show_add()  # list 타입 리턴 도서 정보
-        newbook = Book(add[0], add[1], add[2], add[3])
+        newbook = Book(new_id, add[0], add[1], add[2])
         newbook.book_input(db)
 
-    elif main_choice == 6: #전체 도서 조회
+    elif main_choice == 5:  # 대출 도서 조회
+        book_loan_info(db)
+
+    elif main_choice == 6:  # 전체 도서 조회
         book_all(db)
 
     elif main_choice == 0:  # 종료
