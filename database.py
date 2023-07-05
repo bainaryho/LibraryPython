@@ -19,9 +19,3 @@ class database:
     def close_db(self):
         self.cursor.close()
         self.conn.close()
-
-    # cursor.execute("SELECT title FROM Books")
-    # rows = cursor.fetchone()
-    # rows = cursor.fetchall()
-    # for row in rows:
-    #    print(row)
