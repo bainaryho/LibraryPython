@@ -2,7 +2,7 @@
 import psycopg2
 
 from database import database
-from show import show_book, show_complete, show_book_loan, show_error
+from show import show_book, show_complete, show_book_loan, show_error, show_cant_avail
 
 
 class Book:
@@ -23,7 +23,7 @@ def new_book_id(db):
     db.cursor.execute(sql)
     result = db.cursor.fetchone()
     new_id = int(result[0])
-    return new_id+1
+    return new_id + 1
 
 
 def book_info(searcher, db):
@@ -40,9 +40,10 @@ def book_info(searcher, db):
 
 
 def book_loan(searcher, db):
-    select_id = "SELECT book_id FROM Books WHERE title = %s " % ('\'' + searcher + '\'')
-    db.cursor.execute(select_id)
-    select_id = db.cursor.fetchone()
+    avail = available_loan(searcher, db)
+    if not avail:
+        show_cant_avail(searcher)
+        return
 
     update_sql = "UPDATE Books SET is_available = FALSE WHERE book_id= %s;"
     insert_sql = "INSERT INTO Loans VALUES (default, %s, now(), null);"
@@ -51,15 +52,21 @@ def book_loan(searcher, db):
         if searcher.isdigit():
             db.cursor.execute(insert_sql, searcher)
             db.cursor.execute(update_sql, searcher)
+            db.conn.commit()
+
         else:
+            select_id = "SELECT book_id FROM Books WHERE title = %s " % ('\'' + searcher + '\'')
+            db.cursor.execute(select_id)
+            select_id = db.cursor.fetchone()
             db.cursor.execute(insert_sql, select_id)
             db.cursor.execute(update_sql, select_id)
+            db.conn.commit()
+
     except psycopg2.Error:
         db.conn.rollback()
         show_error('대출')
         return
 
-    db.conn.commit()
     show_complete('대출')
 
 
@@ -91,8 +98,7 @@ def book_loan_info(db):
     sql = "SELECT B.book_id, B.title, B.author, B.publisher, L.loan_date, L.return_date " \
           "FROM Books AS B " \
           "INNER JOIN Loans AS L ON B.book_id = L.Book_id " \
-          "WHERE is_available = FALSE " \
-          "ORDER BY return_date desc ;"
+          "ORDER BY loan_date desc ;"
     db.cursor.execute(sql)
     result = db.cursor.fetchall()
     show_book_loan(result)
@@ -103,3 +109,23 @@ def book_all(db):
     db.cursor.execute(sql)
     result = db.cursor.fetchall()
     show_book(result, '전체 도서 목록 조회')
+
+
+def available_loan(searcher, db):
+    sql = "SELECT is_available FROM Books WHERE book_id=%s;"
+
+    if searcher.isdigit():
+        db.cursor.execute(sql, searcher)
+    else:
+        select_id = "SELECT book_id FROM Books WHERE title = %s " % ('\'' + searcher + '\'')
+        db.cursor.execute(select_id)
+        select_id = db.cursor.fetchone()
+        db.cursor.execute(sql, select_id)
+
+    already = db.cursor.fetchone()
+    print(already, type(already))
+
+    if already[0] == True:
+        return True
+    else:
+        return False

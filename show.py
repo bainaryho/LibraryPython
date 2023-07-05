@@ -48,6 +48,7 @@ def show_book(result, word):
         if book[4] == True:
             print('|', book[0], '|', book[1], '|', book[2], '|', book[3], '|대출 가능')
         else:
+            print('| 현재 대출이 불가한 도서입니다')
             print('|', book[0], '|', book[1], '|', book[2], '|', book[3], '|대출 중')
     print('|-------------------------')
     input('|[조회 종료] q입력 후 Enter : ')
@@ -85,10 +86,9 @@ def show_error(word):
     input('|[메인 이동] q입력 후 Enter : ')
     print('+-------------------------\n')
 
-
-def show_already_loan():
+def show_cant_avail(word):
     print('+-------------------------')
-    print('| 도서가 이미 대출중 입니다')
+    print('| ', word, '도서는 이미 대여중입니다.')
     print('|-------------------------')
     input('|[메인 이동] q입력 후 Enter : ')
     print('+-------------------------\n')
