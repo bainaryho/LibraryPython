@@ -18,12 +18,23 @@ class Book:
         db.conn.commit()
 
 
-def new_book_id(db):  # loans의 id 자동 증가 함수
-    sql = "SELECT max(book_id) FROM Books;"
+def new_book_id(db):  # book_id 자동 증가 함수
+    try:
+        sql = "SELECT max(book_id) FROM Books"
+        db.cursor.execute(sql)
+        result = db.cursor.fetchone()
+        new_id = int(result[0])
+        return new_id + 1
+    except psycopg2.Error:
+        return 1
+
+
+def get_loan_id(searcher, db):  # 참조 하고 싶은 loan_id를 찾아오는 함수
+    sql = "SELECT loan_id FROM Loans WHERE return_date IS NULL AND book_id=%s;" % ('\'' + searcher + '\'')
     db.cursor.execute(sql)
     result = db.cursor.fetchone()
-    new_id = int(result[0])
-    return new_id + 1
+    get_id = int(result[0])
+    return get_id
 
 
 def book_info(searcher, db):  # 도서 검색
@@ -46,21 +57,26 @@ def book_loan(searcher, db):  # 대출 기능
         return
 
     try:
-        if searcher.isdigit():
+        if searcher.isdigit(): #숫자 입력받음
             update_sql = "UPDATE Books SET is_available = FALSE WHERE book_id= %s;" % ('\'' + searcher + '\'')
             insert_sql = "INSERT INTO Loans VALUES (default, %s, now(), null);" % ('\'' + searcher + '\'')
+
             db.cursor.execute(insert_sql)
             db.cursor.execute(update_sql)
-            db.conn.commit()
 
+            db.conn.commit()
         else:
             update_sql = "UPDATE Books SET is_available = FALSE WHERE book_id= %s;"
             insert_sql = "INSERT INTO Loans VALUES (default, %s, now(), null);"
+
             select_id = "SELECT book_id FROM Books WHERE title = %s " % ('\'' + searcher + '\'')
+
             db.cursor.execute(select_id)
             select_id = db.cursor.fetchone()
+
             db.cursor.execute(insert_sql, select_id)
             db.cursor.execute(update_sql, select_id)
+
             db.conn.commit()
 
     except psycopg2.Error:
@@ -79,19 +95,29 @@ def book_return(searcher, db):  # 반납 기능
 
     try:
         if searcher.isdigit():
+            # 반납)업데이트 전에 해당 시퀀스 값(loan_id)를 가져와야함. 그것은 return_date가 비어있는거겠지
+            loan_id = get_loan_id(searcher, db)
+
             update_books = "UPDATE Books SET is_available = TRUE WHERE book_id= %s;" % ('\'' + searcher + '\'')
-            update_loans = "UPDATE Loans SET return_date = now() WHERE book_id= %s;" % ('\'' + searcher + '\'')
-            db.cursor.execute(update_loans)
+            update_loans = "UPDATE Loans SET return_date = now() WHERE book_id= %s AND loan_id= %s;"
+            data = [searcher, loan_id]
+
+            db.cursor.execute(update_loans, data)
             db.cursor.execute(update_books)
             db.conn.commit()
 
         else:
-            update_books = "UPDATE Books SET is_available = TRUE WHERE book_id= %s;"
-            update_loans = "UPDATE Loans SET return_date = now() WHERE book_id= %s;"
             select_id = "SELECT book_id FROM Books WHERE title = %s " % ('\'' + searcher + '\'')
             db.cursor.execute(select_id)
             select_id = db.cursor.fetchone()
-            db.cursor.execute(update_loans, select_id)
+
+            loan_id = get_loan_id(select_id, db)
+
+            update_books = "UPDATE Books SET is_available = TRUE WHERE book_id= %s;"
+            update_loans = "UPDATE Loans SET return_date = now() WHERE book_id= %s AND loan_id= %s;"
+            data = [select_id, loan_id]
+
+            db.cursor.execute(update_loans, data)
             db.cursor.execute(update_books, select_id)
             db.conn.commit()
 
@@ -125,23 +151,17 @@ def available(searcher, db):  # 대출 / 반납 가능 여부 판단 함수
     sql_test = "SELECT is_available FROM Books WHERE book_id=%s" % ('\'' + searcher + '\'')
 
     if searcher.isdigit():
-        print('정수형 입력 확인')
         db.cursor.execute(sql_test)
-        print('cursor 정상 작동')
+
     else:
-        print('문자형 입력 확인')
         select_id = "SELECT book_id FROM Books WHERE title = %s " % ('\'' + searcher + '\'')
         db.cursor.execute(select_id)
         select_id = db.cursor.fetchone()
         db.cursor.execute(sql, select_id)
-        print('cursor 정상 작동')
 
     already = db.cursor.fetchone()
 
-    print('판단 시작')
     if already[0] == True:
-        print('판단 결과 대출 가능')
         return True
     else:
-        print('판단 결과 대출중')
         return False
