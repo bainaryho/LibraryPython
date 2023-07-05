@@ -45,16 +45,17 @@ def book_loan(searcher, db):  # 대출 기능
         show_cant_avail(searcher)
         return
 
-    update_sql = "UPDATE Books SET is_available = FALSE WHERE book_id= %s;"
-    insert_sql = "INSERT INTO Loans VALUES (default, %s, now(), null);"
-
     try:
         if searcher.isdigit():
-            db.cursor.execute(insert_sql, searcher)
-            db.cursor.execute(update_sql, searcher)
+            update_sql = "UPDATE Books SET is_available = FALSE WHERE book_id= %s;" % ('\'' + searcher + '\'')
+            insert_sql = "INSERT INTO Loans VALUES (default, %s, now(), null);" % ('\'' + searcher + '\'')
+            db.cursor.execute(insert_sql)
+            db.cursor.execute(update_sql)
             db.conn.commit()
 
         else:
+            update_sql = "UPDATE Books SET is_available = FALSE WHERE book_id= %s;"
+            insert_sql = "INSERT INTO Loans VALUES (default, %s, now(), null);"
             select_id = "SELECT book_id FROM Books WHERE title = %s " % ('\'' + searcher + '\'')
             db.cursor.execute(select_id)
             select_id = db.cursor.fetchone()
