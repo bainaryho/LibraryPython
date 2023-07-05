@@ -1,5 +1,8 @@
 # 도서에 대한 클래스 선언
+import psycopg2
+
 from database import database
+from show import show_book, show_complete, show_book_loan, show_error
 
 
 class Book:
@@ -13,93 +16,90 @@ class Book:
         sql = "INSERT INTO Books VALUES (%s,%s,%s,%s, TRUE);"
         db.cursor.execute(sql, (int(self.id), self.title, self.author, self.publisher))
         db.conn.commit()
-        return
+
+
+def new_book_id(db):
+    sql = "SELECT max(book_id) FROM Books;"
+    db.cursor.execute(sql)
+    result = db.cursor.fetchone()
+    new_id = int(result[0])
+    return new_id+1
 
 
 def book_info(searcher, db):
     if searcher.isdigit():
-        sql = "SELECT * FROM Books WHERE book_id= %s "
+        sql = "SELECT * FROM Books WHERE book_id= %s;"
         db.cursor.execute(sql, searcher)
     else:
-        like_word = '\'%'+searcher+'%\''
+        like_word = '\'%' + searcher + '%\''
         sql = "SELECT * FROM Books WHERE title LIKE %s" % (like_word)
         db.cursor.execute(sql)
 
     result = db.cursor.fetchall()
-    print('+-------------------------')
-    print('|도서 정보 조회')
-    print('|-------------------------')
-    print('|도서ID | 도서명 | 저자 | 출판사 | 상태')
-    print('|-------------------------')
-    for book in result:
-        if book[4] == True:
-            print('|', book[0], '|', book[1], '|', book[2], '|', book[3], '|대출 가능')
-        else:
-            print('|', book[0], '|', book[1], '|', book[2], '|', book[3], '|대출 중')
-    print('|-------------------------')
-    input('|-> Enter : 메뉴로')
-    print('+-------------------------\n')
-    return
+    show_book(result, '도서 정보 조회')
+
 
 def book_loan(searcher, db):
-    if searcher.isdigit():
-        update_sql = "UPDATE Books SET is_available = FALSE WHERE book_id= %s "
-        insert_sql = "INSERT INTO Loans VALUES (default, %s, now(), null);"
+    select_id = "SELECT book_id FROM Books WHERE title = %s " % ('\'' + searcher + '\'')
+    db.cursor.execute(select_id)
+    select_id = db.cursor.fetchone()
 
-        db.cursor.execute(insert_sql, searcher)
-        db.cursor.execute(update_sql, searcher)
+    update_sql = "UPDATE Books SET is_available = FALSE WHERE book_id= %s;"
+    insert_sql = "INSERT INTO Loans VALUES (default, %s, now(), null);"
 
-    else:
-        select_id = "SELECT book_id FROM Books WHERE title = %s " % ('\''+searcher+'\'')
-        db.cursor.execute(select_id)
-        select_id = db.cursor.fetchone()
+    try:
+        if searcher.isdigit():
+            db.cursor.execute(insert_sql, searcher)
+            db.cursor.execute(update_sql, searcher)
+        else:
+            db.cursor.execute(insert_sql, select_id)
+            db.cursor.execute(update_sql, select_id)
+    except psycopg2.Error:
+        db.conn.rollback()
+        show_error('대출')
+        return
 
-        update_sql = "UPDATE Books SET is_available = FALSE WHERE book_id= %s "
-        insert_sql = "INSERT INTO Loans VALUES (default, %s, now(), null);"
-
-        db.cursor.execute(insert_sql, select_id)
-        db.cursor.execute(update_sql, select_id)
-
-    print('+-------------------------')
-    print('|대출이 완료 되었습니다')
     db.conn.commit()
-    print('|-------------------------')
-    input('|-> Enter : 메뉴로')
-    print('+-------------------------\n')
-    return
+    show_complete('대출')
 
 
 def book_return(searcher, db):
-    # 도서 반납 기능 (기본)
-    # (기본) 반납을 원하는 도서의 ID 혹은 이름을 입력하여 반납합니다.
-    # (기본) 반납하면 도서의 상태가 대출 가능으로 변경됩니다.
-    pass
+    select_id = "SELECT book_id FROM Books WHERE title = %s " % ('\'' + searcher + '\'')
+    db.cursor.execute(select_id)
+    select_id = db.cursor.fetchone()
+
+    update_books = "UPDATE Books SET is_available = TRUE WHERE book_id= %s;"
+    update_loans = "UPDATE Loans SET return_date = now() WHERE book_id= %s;"
+
+    try:
+        if searcher.isdigit():
+            db.cursor.execute(update_loans, searcher)
+            db.cursor.execute(update_books, searcher)
+        else:
+            db.cursor.execute(update_loans, select_id)
+            db.cursor.execute(update_books, select_id)
+    except psycopg2.Error:
+        db.conn.rollback()
+        show_error('반납')
+        return
+
     db.conn.commit()
+    show_complete('반납')
 
 
-def book_loan_info():
-    # 대출 정보 조회 기능 (심화)
-    # 대출한 도서의 정보를 모두 조회할 수 있습니다.
-    # 대출 정보는 도서의 ID, 이름, 저자, 출판사, 대출 날짜, 반납일자로 구성됩니다.
-    # 대출 정보는 대출 날짜를 기준으로 내림차순으로 정렬됩니다.
-    pass
-
-def book_all(db):
-    sql = "SELECT * FROM Books;"
+def book_loan_info(db):
+    sql = "SELECT B.book_id, B.title, B.author, B.publisher, L.loan_date, L.return_date " \
+          "FROM Books AS B " \
+          "INNER JOIN Loans AS L ON B.book_id = L.Book_id " \
+          "WHERE is_available = FALSE " \
+          "ORDER BY return_date desc ;"
     db.cursor.execute(sql)
     result = db.cursor.fetchall()
+    show_book_loan(result)
 
-    print('+-------------------------')
-    print('|전체 도서 목록 조회')
-    print('|-------------------------')
-    print('|도서ID | 도서명 | 저자 | 출판사 | 상태')
-    print('|-------------------------')
-    for book in result:
-        if book[4] == True:
-            print('|', book[0], '|', book[1], '|', book[2], '|', book[3], '|대출 가능')
-        else:
-            print('|', book[0], '|', book[1], '|', book[2], '|', book[3], '|대출 중')
-    print('|-------------------------')
-    input('|-> Enter : 메뉴로')
-    print('+-------------------------\n')
-    return
+
+def book_all(db):
+    sql = "SELECT * FROM Books ORDER BY book_id;"
+    db.cursor.execute(sql)
+    result = db.cursor.fetchall()
+    show_book(result, '전체 도서 목록 조회')
