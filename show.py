@@ -51,7 +51,7 @@ def show_book(result, word):
             print('| 현재 대출이 불가한 도서입니다')
             print('|', book[0], '|', book[1], '|', book[2], '|', book[3], '|대출 중')
     print('|-------------------------')
-    input('|[조회 종료] q입력 후 Enter : ')
+    input('|메인으로 아무 문자 Enter... ')
     print('+-------------------------\n')
 
 
@@ -64,7 +64,7 @@ def show_book_loan(result):
     for book in result:
         print('|', book[0], '|', book[1], '|', book[2], '|', book[3], '|', book[4], '|', book[5])
     print('|-------------------------')
-    input('|[조회 종료] q입력 후 Enter : ')
+    input('|메인으로 아무 문자 Enter... ')
     print('+-------------------------\n')
 
 
@@ -72,7 +72,7 @@ def show_complete(word):
     print('+-------------------------')
     print('| ', word, '이 완료 되었습니다')
     print('|-------------------------')
-    input('|[조회 종료] q입력 후 Enter : ')
+    input('|메인으로 아무 문자 Enter... ')
     print('+-------------------------\n')
 
 
@@ -83,12 +83,12 @@ def show_error(word):
     print('| 입력하신 이름의 도서가 없습니다')
     print('|', word, '은 정확한 도서명이 요구됩니다')
     print('|-------------------------')
-    input('|[메인 이동] q입력 후 Enter : ')
+    input('|메인으로 아무 문자 Enter... ')
     print('+-------------------------\n')
 
 def show_cant_avail(word):
     print('+-------------------------')
-    print('| ', word, '도서는 이미 대여중입니다.')
+    print('| ', word, '해당 도서로 진행 불가')
     print('|-------------------------')
-    input('|[메인 이동] q입력 후 Enter : ')
+    input('|메인으로 아무 문자 Enter... ')
     print('+-------------------------\n')
