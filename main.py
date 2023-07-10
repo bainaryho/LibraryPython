@@ -8,7 +8,6 @@ from show import *
 if __name__ == '__main__':
     db = database(None, None)  # db 객체 생성
     db.open_db()  # db 열기
-    manu_temp = None #메뉴 선택 변수 추가
 
     while 1:
         main_choice = show_main()

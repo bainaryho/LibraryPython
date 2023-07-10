@@ -51,7 +51,7 @@ def book_info(searcher, db):  # 도서 검색
 
 
 def book_loan(searcher, db):  # 대출 기능
-    avail = available(searcher, db)
+    avail = available(searcher, db) #book.py/available 함수에서 대출이 가능한지 확인 후 대출합니다.
     if not avail:
         show_cant_avail(searcher)
         return
@@ -88,7 +88,7 @@ def book_loan(searcher, db):  # 대출 기능
 
 
 def book_return(searcher, db):  # 반납 기능
-    avail = available(searcher, db)
+    avail = available(searcher, db) #book.py/available 함수에서 반납이 가능한지 확인 후 반납합니다.
     if avail:
         show_cant_avail(searcher)
         return
