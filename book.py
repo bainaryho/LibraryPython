@@ -57,7 +57,7 @@ def book_loan(searcher, db):  # 대출 기능
         return
 
     try:
-        if searcher.isdigit(): #숫자 입력받음
+        if searcher.isdigit(): #숫자로만 입력받은 경우 판단
             update_sql = "UPDATE Books SET is_available = FALSE WHERE book_id= %s;" % ('\'' + searcher + '\'')
             insert_sql = "INSERT INTO Loans VALUES (default, %s, now(), null);" % ('\'' + searcher + '\'')
 
@@ -94,8 +94,8 @@ def book_return(searcher, db):  # 반납 기능
         return
 
     try:
-        if searcher.isdigit():
-            # 반납)업데이트 전에 해당 시퀀스 값(loan_id)를 가져와야함. 그것은 return_date가 비어있는거겠지
+        if searcher.isdigit(): #숫자로만 입력받은 경우 판단
+            # 반납)업데이트 전에 해당 시퀀스 값(loan_id)를 가져와야함. return_date가 비어있는거
             loan_id = get_loan_id(searcher, db)
 
             update_books = "UPDATE Books SET is_available = TRUE WHERE book_id= %s;" % ('\'' + searcher + '\'')

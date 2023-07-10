@@ -15,9 +15,9 @@ def show_main():
     return main_choice
 
 
-def show_sub(service):
+def show_sub(word):
     print('+-------------------------')
-    print('| 도서', service, '서브 메뉴')
+    print('| 도서', word, '서브 메뉴')
     print('|-------------------------')
     print('|도서 ID 또는 이름을 입력하세요')
     print('|-------------------------')

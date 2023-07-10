@@ -8,11 +8,11 @@ class database:
 
     def open_db(self):
         self.conn = psycopg2.connect(
-            host="localhost",
-            port="5432",
-            dbname="library",
-            user="user1",
-            password="4444"
+            host="localhost",  # 호스트 값
+            port="5432",  # 포트 값 받아 오고
+            dbname="library",  # 다
+            user="user1",  # 받아
+            password="4444"  # 온다
         )
         self.cursor = self.conn.cursor()
 
