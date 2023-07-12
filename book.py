@@ -68,7 +68,7 @@ def book_loan(searcher, db):  # 대출 기능
         else:
             update_sql = "UPDATE Books SET is_available = FALSE WHERE book_id= %s;"
             insert_sql = "INSERT INTO Loans VALUES (default, %s, now(), null);"
-
+            # title로 id를 찾은후에는 위와 동일, 이부분 개선하고싶네..
             select_id = "SELECT book_id FROM Books WHERE title = %s " % ('\'' + searcher + '\'')
 
             db.cursor.execute(select_id)
@@ -107,6 +107,7 @@ def book_return(searcher, db):  # 반납 기능
             db.conn.commit()
 
         else:
+            # title로 id를 찾은후에는 위와 동일, 이부분 개선하고싶네..
             select_id = "SELECT book_id FROM Books WHERE title = %s " % ('\'' + searcher + '\'')
             db.cursor.execute(select_id)
             select_id = db.cursor.fetchone()
